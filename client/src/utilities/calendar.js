@@ -1,21 +1,33 @@
 import parseISO from 'date-fns/parseISO'
 import format from 'date-fns/format';
+import eachDayOfInterval from 'date-fns/eachDayOfInterval'
 
+// filters through events list and returns all events for current visible calendar month
 export const getMatchMonth = (monthToMatch, events) => {
   if (!events.length) return [];
 
-  return events.filter(event => {
-    const isoDate = parseISO(event.startDate);
-    const monthInString = format(isoDate, 'LLLL'); // December
-    return monthToMatch === monthInString
-  })
+  let allMatchedEvents = [];
+
+  for (let event of events) {
+    let matchedEvents = event.dates.filter(date => {
+      const isoDate = parseISO(date.startAt);
+      const monthInString = format(isoDate, 'LLLL'); // December
+
+      return monthToMatch === monthInString
+    }).map(date => ({ ...event, ...date }))
+
+    allMatchedEvents = [...allMatchedEvents, ...matchedEvents]
+  }
+
+  return allMatchedEvents;
 }
 
+//filters through events list and returns all events for current day
 export const getEventsByDayNumber = (currentDay, allEvents) => {
   if (!allEvents.length) return [];
 
   return allEvents.filter(event => {
-    const isoDate = parseISO(event.startDate);
+    const isoDate = parseISO(event.startAt);
     const day = format(isoDate, 'd'); // '2'
     return currentDay === Number(day)
   })
@@ -24,4 +36,54 @@ export const getEventsByDayNumber = (currentDay, allEvents) => {
 export const formatToLocalTime = date => {
   const isoDate = parseISO(date);
   return format(isoDate, 'p')
+}
+
+export const convertLocalDateToUTC = (htmlDate = '', htmlTime = '') => {
+  const [year, month, day] = htmlDate.split('-');
+  const [hour, minute] = htmlTime.split(':');
+
+  // Create local time with form input
+  const localDate = new Date(year, month - 1, day, hour, minute);
+
+  // Convert local date to UTC date format
+  return Date.UTC(localDate.getUTCFullYear(), localDate.getUTCMonth(),
+    localDate.getUTCDate(), localDate.getUTCHours(),
+    localDate.getUTCMinutes(), localDate.getUTCSeconds());
+}
+
+export const generateRecurringDatesArray = ({ initialDate, startTime, finalDate, endTime, title, description, location, recurring }) => {
+  // Generate UTC time from HTML input (date and time).
+  const startUTC = convertLocalDateToUTC(initialDate, startTime);
+  const endUTC = convertLocalDateToUTC(finalDate, endTime);
+
+  // Generate a range of dates in between initialDate & endDate (date-fns does not generate the time sadly)
+  const initialDatesToFinalDates = eachDayOfInterval({
+    start: startUTC,
+    end: endUTC,
+  })
+
+  // Filter out dates that are not recurring
+  const result = initialDatesToFinalDates.filter(date => {
+    return recurring.days.some(day => day === format(date, 'cccc'))
+  })
+
+  // Create recurring dates array with events information
+  const dates = result.map(date => {
+    const [month, day, year] = format(date, 'P').split('/')
+    const htmlDateFormat = `${year}-${month}-${day}`;
+
+    // Recreate date with time added
+    const newStartDate = convertLocalDateToUTC(htmlDateFormat, startTime);
+    const newEndDate = convertLocalDateToUTC(htmlDateFormat, endTime);
+
+    return {
+      title: title,
+      description: description,
+      startAt: newStartDate,
+      endAt: newEndDate,
+      location: location,
+    }
+  })
+
+  return dates
 }

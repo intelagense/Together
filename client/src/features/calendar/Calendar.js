@@ -37,13 +37,14 @@ const Calendar = () => {
 
       // Database data from server
       const response = await DataService.getAll()
+      console.log(response.data);
       setEvents(response.data);
     };
-    
+
     fetch()
       .then(setLoading(false))
       .catch(setLoading(false))
-  },[])
+  }, [])
 
   // Render nothing while fetching for data from server
   if (loading) return null;

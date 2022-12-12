@@ -31,10 +31,11 @@ const dropIn = {
 
 const ModalCard = ({ handleClose }) => {
   const [context] = useContext(Context)
+  console.log(context.event)
   return (
     <Backdrop onClick={handleClose}>
       <motion.div
-        className="modal flex flex-col items-center py-0 px-2rem rounded-xl bg-white"
+        className="modal flex h-fit flex-col items-center py-0 px-2rem rounded-xl bg-white"
         onClick={e => e.stopPropagation()}
         variants={dropIn}
         initial="hidden"
@@ -55,7 +56,7 @@ const ModalCard = ({ handleClose }) => {
             <section className="flex m-3 gap-1 font-semibold">
               <GrCalendar className="mt-1" />
               <span className="">Day:</span>{" "}
-              <span>{context.event.startDate.split('T')[0]}</span>
+              <span>{context.event.startAt.split('T')[0]}</span>
             </section>
 
             <section className="flex m-3 gap-1 font-semibold">
@@ -64,19 +65,19 @@ const ModalCard = ({ handleClose }) => {
               <span className="ml-9">Ends: {context.event.endTime}</span>
             </section>
           </div>
-          <div className="description w-auto h-20 my-2 p-2 border-solid border-black border-2 font-semibold rounded-xl bg-neutral-200/50">
+          <div className="description break-words w-auto min-h-20 my-2 p-2 border-solid border-black border-2 font-semibold rounded-xl bg-neutral-200/50">
             <p>Description: {context.event.description}</p>
           </div>
           <div>
             <section className="flex m-3 gap-1 font-semibold">
               <IoIosRepeat className="mt-1" />
               <span>
-                Repeats:
-                {context.event.recurringRate !== 'noRecurr' ? <div>{context.event.recurringDates.join(', ')}, {context.event.recurringRate}</div> : <div>Does not repeat.</div>}
+                Repeats: 
+                {context.event.recurring ? <div>{context.event.recurringPattern.days.join(', ')}, {context.event.recurring}</div> : <div>Does not repeat.</div>}
               </span>
             </section>
 
-            <section className="flex m-3 gap-1 font-semibold">
+            <section className="flex m-3 gap-1 pb-4 font-semibold">
               <IoLocationOutline className="mt-1" /> <span>Location: {context.event.location}</span>
             </section>
           </div>

@@ -28,6 +28,7 @@ module.exports = {
   },
   getAll: async (req, res) => {
     try {
+      await Event.deleteOne({ _id: "6397862c6799764114933c17" })
       const events = await Event.find();
       // return all events
       res.json(events);
